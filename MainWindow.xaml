@@ -1,0 +1,252 @@
+<ui:FluentWindow x:Class="WgcfGUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Warp WireGuard Profile Generator" Height="700" Width="850"
+        WindowStartupLocation="CenterScreen" 
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
+        Loaded="Window_Loaded">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Title="Warp WireGuard Profile Generator" Grid.Row="0" Margin="0,0,0,10"/>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,0,20,20">
+            <StackPanel>
+                
+                <StackPanel Margin="0,0,0,25">
+                    <TextBlock Text="Configuration Wizard" FontSize="28" FontWeight="SemiBold" />
+                    <TextBlock Text="Create, configure, and export WireGuard profiles for Cloudflare Warp seamlessly using system-native Fluent styling." FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <!-- 1. Account Section -->
+                <ui:CardExpander Header="1. Account Information" Icon="Person24" IsExpanded="True" Margin="0,0,0,15">
+                    <StackPanel Margin="0,15,0,0">
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="Warp Account Status" FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="AccountStatusText" Text="Retrieving info..." Foreground="{DynamicResource TextFillColorTertiaryBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <ui:Button Content="Refresh" Click="RefreshAccount_Click" Appearance="Secondary" Margin="0,0,10,0"/>
+                                <ui:Button Content="Clear Cache" Click="ClearCache_Click" Appearance="Danger" Margin="0,0,10,0"/>
+                                <ui:Button Content="Register New Account" Click="RegisterAccount_Click" Appearance="Primary" Width="160"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Rectangle Height="1" Fill="{DynamicResource ControlStrokeColorDefaultBrush}" Margin="0,5,0,15"/>
+
+                        <StackPanel>
+                            <TextBlock Text="License Key (Optional)" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <TextBlock Text="Enter your existing Warp+ key here if you have one." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ui:TextBox x:Name="LicenseBox" Grid.Column="0" Margin="0,0,10,0" PlaceholderText="Your License Key..." ClearButtonEnabled="True"/>
+                                <ui:Button Content="Apply Key" Grid.Column="1" Click="ApplyLicense_Click" Width="100"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:CardExpander>
+
+                <!-- 2. Profile Configuration -->
+                <ui:CardExpander Header="2. Setup Connection Details" Icon="Settings24" IsExpanded="True" Margin="0,0,0,15">
+                    <StackPanel Margin="0,15,0,0">
+                        <TextBlock Text="General Parameters" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="MTU Size:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <ui:TextBox Grid.Column="1" x:Name="MtuBox" Text="1280" ToolTip="Maximum Transmission Unit." ClearButtonEnabled="True" TextChanged="Control_Changed"/>
+                            <TextBlock Grid.Column="2" Text="Presets:" VerticalAlignment="Center" Margin="15,0,10,0"/>
+                            <ComboBox Grid.Column="3" x:Name="MtuPresetCombo" SelectedIndex="0" SelectionChanged="MtuPresetCombo_SelectionChanged">
+                                <ComboBoxItem Content="Custom"/>
+                                <ComboBoxItem Content="Compatibility (1280)"/>
+                                <ComboBoxItem Content="Standard (1420)"/>
+                                <ComboBoxItem Content="Aggressive (1212)"/>
+                            </ComboBox>
+                        </Grid>
+
+                        <Rectangle Height="1" Fill="{DynamicResource ControlStrokeColorDefaultBrush}" Margin="0,5,0,15"/>
+
+                        <TextBlock Text="Target Device Type" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                            <RadioButton x:Name="RdoDeviceDesktop" Content="Desktop / Mac / Router" IsChecked="True" Checked="DeviceMode_Changed" Margin="0,0,15,0"/>
+                            <RadioButton x:Name="RdoDeviceAndroid" Content="Android Mobile / TV" Checked="DeviceMode_Changed" Margin="0,0,15,0"/>
+                        </StackPanel>
+
+                        <StackPanel x:Name="AndroidOptionsPanel" Visibility="Collapsed" Margin="0,0,0,20">
+                            <ui:CardAction Click="ConfigureExclusions_Click" Icon="Apps24">
+                                <StackPanel>
+                                    <TextBlock Text="Android App Exclusions" FontSize="14" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Configure which apps bypass the VPN. Essential for streaming apps." Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                                    <TextBlock x:Name="ExcludeCountText" Text="0 apps selected" Foreground="{DynamicResource SystemFillColorSuccessBrush}" FontWeight="SemiBold" Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </ui:CardAction>
+                        </StackPanel>
+
+                        <Rectangle Height="1" Fill="{DynamicResource ControlStrokeColorDefaultBrush}" Margin="0,0,0,15"/>
+
+                        <TextBlock Text="Advanced Connections (Optional)" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                        
+                        <Grid Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="DNS Provider:" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="DnsProviderCombo" Grid.Column="1" SelectedIndex="0" SelectionChanged="DnsProviderCombo_SelectionChanged" Margin="0,0,10,0">
+                                <ComboBoxItem Content="Cloudflare"/>
+                                <ComboBoxItem Content="Google"/>
+                                <ComboBoxItem Content="Quad9"/>
+                                <ComboBoxItem Content="AdGuard"/>
+                                <ComboBoxItem Content="Custom Server"/>
+                            </ComboBox>
+                            <ui:DropDownButton Grid.Column="2" Content="Benchmark" Icon="Flash24" ToolTip="Test latency of different DNS categories.">
+                                <ui:DropDownButton.Flyout>
+                                    <ContextMenu>
+                                        <MenuItem Header="Unfiltered (Standard)" Click="BenchmarkUnfiltered_Click">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="Globe24"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Malware Filtered (Security)" Click="BenchmarkMalware_Click">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="Shield24"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Family (Security + Adult)" Click="BenchmarkFamily_Click">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="People24"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </ui:DropDownButton.Flyout>
+                            </ui:DropDownButton>
+                        </Grid>
+                        
+                        <!-- DNS Filter Level -->
+                        <Grid Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="DNS Filter:" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="DnsFilterCombo" Grid.Column="1" SelectedIndex="0" SelectionChanged="DnsFilterCombo_SelectionChanged"/>
+                        </Grid>
+
+                        <ui:TextBox x:Name="CustomDnsBox" PlaceholderText="Comma separated DNS IPs..." Visibility="Collapsed" Margin="120,0,0,5" TextChanged="Control_Changed"/>
+                        
+                        <TextBlock x:Name="DnsResultText" Text="1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" Margin="120,0,0,5"/>
+                        <TextBlock x:Name="DnsWarningText" Text="⚠️ Warning: Filtered/Ad-blocking DNS may disrupt functionality for embedded apps, background trackers, and certain API-reliant platforms." Foreground="{DynamicResource SystemFillColorCautionBrush}" FontSize="11" Margin="120,0,0,15" Visibility="Collapsed" TextWrapping="Wrap"/>
+
+                        <Grid Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Endpoint IP:" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="EndpointCombo" Grid.Column="1" SelectedIndex="0" ToolTip="Some ISPs block the default engage endpoint." SelectionChanged="EndpointCombo_SelectionChanged">
+                                <ComboBoxItem Content="Default (engage.cloudflareclient.com:2408)"/>
+                                <ComboBoxItem Content="IPv4 Direct"/>
+                                <ComboBoxItem Content="IPv6 Direct"/>
+                                <ComboBoxItem Content="Cloudflare Port 500"/>
+                                <ComboBoxItem Content="Custom Endpoint"/>
+                            </ComboBox>
+                        </Grid>
+                        <ui:TextBox x:Name="CustomEndpointBox" PlaceholderText="e.g. 162.159.192.1:2408" Visibility="Collapsed" Margin="120,0,0,15" TextChanged="Control_Changed"/>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Interface IPv4:" VerticalAlignment="Center" ToolTip="Override default 172.16.x.x provided by Cloudflare"/>
+                            <ui:TextBox x:Name="CustomV4Box" Grid.Column="1" PlaceholderText="Leave empty to use assigned Cloudflare IP" TextChanged="Control_Changed"/>
+                        </Grid>
+                        
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Interface IPv6:" VerticalAlignment="Center"/>
+                            <ui:TextBox x:Name="CustomV6Box" Grid.Column="1" PlaceholderText="Leave empty to use assigned Cloudflare IP" TextChanged="Control_Changed"/>
+                        </Grid>
+
+                        <CheckBox x:Name="KeepAliveCheck" Content="Enable Persistent KeepAlive (25s) (Improves NAT traversing)" Click="Control_Changed"/>
+                        <CheckBox x:Name="RemoveIpv6Check" Content="Disable IPv6 (Force IPv4 Only)" IsChecked="True" Margin="0,5,0,0" Click="Control_Changed"/>
+                        <CheckBox x:Name="KillSwitchCheck" Content="Enable Kill Switch / Leak Protection (PreUp/PostUp routing)" ToolTip="Injects Powershell netsh commands to prevent packets leaking outside WG when tunnal collapses" Margin="0,5,0,0" Click="Control_Changed"/>
+                        <CheckBox x:Name="AutoCopyCheck" Content="Automatically copy to clipboard on Save" IsChecked="True" Margin="0,5,0,0"/>
+                        <CheckBox x:Name="OpenFolderCheck" Content="Open save folder after generation" IsChecked="True" Margin="0,5,0,0"/>
+
+                    </StackPanel>
+                </ui:CardExpander>
+
+                <!-- Live Config Preview -->
+                <ui:CardExpander Header="Live Profile Preview" Icon="Code24" IsExpanded="False" Margin="0,0,0,15">
+                    <ui:TextBox x:Name="LivePreviewBox" IsReadOnly="True" AcceptsReturn="True" FontFamily="Consolas" FontSize="11" Height="200" VerticalScrollBarVisibility="Auto" Background="{DynamicResource ControlFillColorDefaultBrush}"/>
+                </ui:CardExpander>
+
+                <!-- 3. Export Section -->
+                <ui:CardExpander Header="3. Finalize &amp; Export" Icon="Save24" IsExpanded="True" Margin="0,0,0,15">
+                    <StackPanel Margin="0,15,0,0">
+                        <TextBlock Text="Ready to compile your profile into a .conf config string for WireGuard." TextWrapping="Wrap" Margin="0,0,0,15"/>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Content="⚡ Magic One-Click (Auto)" Click="OneClickFlow_Click" Appearance="Success" Icon="FlashAuto24" Padding="15,10" FontSize="16" Margin="0,0,10,0" ToolTip="Register (if needed), Optimize, and Generate in one single click."/>
+                            <ui:Button Content="Generate &amp; Save (.conf)" Click="GenerateProfile_Click" Appearance="Primary" Icon="DocumentArrowDown24" Padding="15,10" FontSize="16" Margin="0,0,10,0"/>
+                            <ui:Button Content="Copy to Clipboard" Click="CopyToClipboard_Click" Appearance="Secondary" Icon="Copy24" Padding="15,10" FontSize="16" Margin="0,0,10,0"/>
+                            <ui:Button Content="Generate Mobile QR Code" Click="GenerateQr_Click" Appearance="Secondary" Icon="ScanDash24" Padding="15,10" FontSize="16"/>
+                        </StackPanel>
+                        <TextBlock x:Name="ExportStatusText" Text="" Margin="0,15,0,0" Foreground="{DynamicResource SystemFillColorSuccessBrush}" FontWeight="SemiBold" Visibility="Collapsed"/>
+                    </StackPanel>
+                </ui:CardExpander>
+
+                <!-- Detailed Runtime Log -->
+                <Expander x:Name="LogConsoleExpander" Header="Detailed Runtime Log" Background="Transparent" BorderThickness="0" Margin="0,10,0,0">
+                    <ui:TextBox x:Name="LogConsoleBox" IsReadOnly="True" AcceptsReturn="True" Height="120" FontSize="10" Foreground="{DynamicResource TextFillColorTertiaryBrush}" VerticalScrollBarVisibility="Auto"/>
+                </Expander>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Status Bar area -->
+        <Border Grid.Row="2" Background="{DynamicResource SolidBackgroundFillColorSecondaryBrush}" Padding="20,15" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
+                    <ui:SymbolIcon Symbol="Info24" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,10,0"/>
+                    <TextBlock x:Name="GlobalStatusText" Text="Initialized. Waiting for actions." Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                    <ui:SymbolIcon Symbol="Globe24" Foreground="{DynamicResource SystemFillColorSuccessBrush}" Margin="0,0,5,0"/>
+                    <TextBlock x:Name="PublicIpMirror" Text="My IP: Detecting..." Cursor="Hand" MouseLeftButtonDown="PublicIpMirror_Click" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" ToolTip="Click to refresh your current public IP address."/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Grid.Column="1">
+                    <ui:Button Content="Leak Test" Click="LeakTest_Click" Icon="ShieldQuestion24" Margin="0,0,10,0" ToolTip="Check if your DNS is currently leaking."/>
+                    <ui:Button Content="Verify Status" Click="TraceConnection_Click" Icon="Wifi24"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </Grid>
+</ui:FluentWindow>
